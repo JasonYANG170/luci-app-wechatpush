@@ -173,6 +173,15 @@ jobs:
           find ./bin/packages -type f -name "luci-i18n-${translation_pkg}-*.apk" -delete
           {
             echo "CONFIG_PACKAGE_${PACKAGE_NAME}=m"
+            echo "CONFIG_PACKAGE_${PACKAGE_NAME}_Enable_Traffic_Monitoring=y"
+            echo "CONFIG_PACKAGE_${PACKAGE_NAME}_Enable_Local_Disk_Information_Detection=y"
+            echo "CONFIG_PACKAGE_${PACKAGE_NAME}_Enable_Host_Information_Detection=y"
+            echo "CONFIG_PACKAGE_wrtbwmon=m"
+            echo "CONFIG_PACKAGE_lsblk=m"
+            echo "CONFIG_PACKAGE_smartmontools=m"
+            echo "CONFIG_PACKAGE_smartmontools-drivedb=m"
+            echo "CONFIG_PACKAGE_openssh-client=m"
+            echo "CONFIG_PACKAGE_openssh-keygen=m"
             echo "CONFIG_PACKAGE_luci-i18n-${translation_pkg}-zh-cn=m"
             echo "CONFIG_LUCI_LANG_zh_Hans=y"
           } > .config
