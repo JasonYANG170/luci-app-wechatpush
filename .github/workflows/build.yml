@@ -167,6 +167,11 @@ jobs:
           fi
           mkdir -p ./package/${PACKAGE_NAME}
           rsync -a --delete "$pkg_src"/ ./package/${PACKAGE_NAME}/
+          
+          # 添加 wrtbwmon 包（从第三方源）
+          echo "Adding wrtbwmon package..."
+          git clone --depth=1 https://github.com/brvphoenix/wrtbwmon.git package/wrtbwmon
+          
           translation_pkg=${PACKAGE_NAME#luci-app-}
           mkdir -p ./bin/packages
           find ./bin/packages -type f -name "${PACKAGE_NAME}*.apk" -delete
@@ -201,7 +206,7 @@ jobs:
           translation_pkg=${PACKAGE_NAME#luci-app-}
           rm -rf upload
           mkdir -p upload
-          find ./bin/packages -type f \( -name "${PACKAGE_NAME}*.apk" -o -name "luci-i18n-${translation_pkg}-*.apk" \) | while read -r apk; do
+          find ./bin/packages -type f \( -name "${PACKAGE_NAME}*.apk" -o -name "luci-i18n-${translation_pkg}-*.apk" -o -name "wrtbwmon*.apk" -o -name "lsblk*.apk" -o -name "smartmontools*.apk" -o -name "openssh-client*.apk" -o -name "openssh-keygen*.apk" \) | while read -r apk; do
             rel_path=${apk#./}
             echo "Found apk: $rel_path"
             cp "$apk" upload/
