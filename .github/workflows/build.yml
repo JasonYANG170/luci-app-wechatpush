@@ -24,7 +24,7 @@ env:
   # Note: this method does not support' master' or' openwrt-23.05' and other branch names.
   # 2. 设置要编译的 OpenWrt 版本 (必须是官方的正式发布版标签, 例如 'v23.05.3')
   #    注意：此方法不支持 'master' 或 'openwrt-23.05' 等分支名
-  OPENWRT_VERSION: 'v25.12.0-rc4'
+  OPENWRT_VERSION: 'v25.12.0-rc1'
 
   # 3. Specify the SDK save directory, generally without modification.
   # 3. 指定SDK保存目录，一般不用修改
@@ -46,8 +46,8 @@ jobs:
         target:
           # The compiled path is found here in https://downloads.openwrt.org/releases/24.10.3/targets, and the name is anything.
           # 编译的path在https://downloads.openwrt.org/releases/24.10.3/targets 这里查找，name随意
-          - name: x86_64
-            path: x86/64
+          - name: rockchip
+            path: rockchip
           #- name: mediatek_filogic
           #  path: mediatek/filogic
           #- name: mips_mt7621
@@ -130,8 +130,8 @@ jobs:
           rsync -a --delete "$pkg_src"/ ./package/${PACKAGE_NAME}/
           translation_pkg=${PACKAGE_NAME#luci-app-}
           mkdir -p ./bin/packages
-          find ./bin/packages -type f -name "${PACKAGE_NAME}*.ipk" -delete
-          find ./bin/packages -type f -name "luci-i18n-${translation_pkg}-*.ipk" -delete
+          find ./bin/packages -type f -name "${PACKAGE_NAME}*.apk" -delete
+          find ./bin/packages -type f -name "luci-i18n-${translation_pkg}-*.apk" -delete
           {
             echo "CONFIG_PACKAGE_${PACKAGE_NAME}=m"
             echo "CONFIG_PACKAGE_luci-i18n-${translation_pkg}-zh-cn=m"
@@ -145,21 +145,21 @@ jobs:
         run: |
           make package/${PACKAGE_NAME}/compile V=s -j$(($(nproc) + 1))
 
-      # 步骤 7: 查找并准备 .ipk 文件
-      - name: Find and prepare .ipk file
-        id: find_ipk
+      # 步骤 7: 查找并准备 .apk 文件
+      - name: Find and prepare .apk file
+        id: find_apk
         working-directory: ${{ env.SDK_DIR }}
         run: |
           translation_pkg=${PACKAGE_NAME#luci-app-}
           rm -rf upload
           mkdir -p upload
-          find ./bin/packages -type f \( -name "${PACKAGE_NAME}*.ipk" -o -name "luci-i18n-${translation_pkg}-*.ipk" \) | while read -r ipk; do
-            rel_path=${ipk#./}
-            echo "Found IPK: $rel_path"
-            cp "$ipk" upload/
+          find ./bin/packages -type f \( -name "${PACKAGE_NAME}*.apk" -o -name "luci-i18n-${translation_pkg}-*.apk" \) | while read -r apk; do
+            rel_path=${apk#./}
+            echo "Found apk: $rel_path"
+            cp "$apk" upload/
           done
-          if ! find upload -maxdepth 1 -type f -name '*.ipk' | grep -q '.'; then
-            echo "::error::No IPK files found in ./bin/packages/"
+          if ! find upload -maxdepth 1 -type f -name '*.apk' | grep -q '.'; then
+            echo "::error::No apk files found in ./bin/packages/"
             # 显示编译输出目录树，方便调试
             echo "Directory tree of ./bin/:"
             ls -R ./bin/
@@ -167,12 +167,12 @@ jobs:
           fi
           echo "path=upload" >> $GITHUB_OUTPUT
 
-      # 步骤 8: 上传 .ipk 文件作为构建产物
+      # 步骤 8: 上传 .apk 文件作为构建产物
       - name: Upload .apk artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE_NAME }}-${{ matrix.target.name }}
-          path: ${{ env.SDK_DIR }}/${{ steps.find_ipk.outputs.path }}
+          path: ${{ env.SDK_DIR }}/${{ steps.find_apk.outputs.path }}
           if-no-files-found: error
 
   release:
