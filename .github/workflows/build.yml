@@ -107,7 +107,32 @@ jobs:
 
           echo "Updating feeds..."
           cd ${{ env.SDK_DIR }}
-          ./scripts/feeds update -a
+          
+          # 查看 feeds 配置
+          echo "Current feeds configuration:"
+          cat feeds.conf.default
+          
+          # Retry logic for feeds update (handles transient network issues)
+          max_retries=5
+          retry_count=0
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries to update feeds..."
+            if ./scripts/feeds update -a; then
+              echo "Feeds update successful"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              if [ $retry_count -lt $max_retries ]; then
+                wait_time=$((60 * retry_count))
+                echo "Feeds update failed, waiting ${wait_time} seconds before retry..."
+                sleep $wait_time
+              else
+                echo "::error::Feeds update failed after $max_retries attempts"
+                exit 1
+              fi
+            fi
+          done
+          
           ./scripts/feeds install -a
           cd ..
 
